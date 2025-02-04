@@ -1,0 +1,187 @@
+---
+title: 'How to Build a High-Performance Personal Blog with MDX and Contentlayer'
+date: '2025-02-04'
+author: 'Chloe Zhou'
+tags: ['next-js', 'mdx', 'contentlayer']
+summary: 'Learn how to create a fast and flexible personal blog using MDX and Contentlayer in Nextjs.'
+draft: true
+---
+
+<TOCInline toc={props.toc} toHeading={3} />
+
+## Why MDX & Contentlayer for Your Personal Blog?
+
+If you’re building a personal tech blog, you want:
+
+- A **fast** and **SEO-friendly** site
+- The flexibility to use **interactive React components** inside posts
+- An easy way to manage content **without a complex CMS**
+
+**This is where [MDX](https://mdxjs.com/) + [Contentlayer](https://contentlayer.dev/) + [Nextjs](https://nextjs.org/) shine!**
+
+- MDX lets you mix Markdown with JSX, so you can add components inside blog posts.
+- Contentlayer turns your `.mdx` files into structured `JSON`, making it easy to fetch & display them in Nextjs.
+- Nextjs provides server-side rendering (SSR) and static site generation (SSG) for speed and performance.
+
+## Setting Up Your MDX-Powered Blog
+
+### Organizing Your Blog Files
+
+Choose a directory to store your blog posts. In my project, all blog posts are stored inside the `data/blog` directory. To create a new post, simply add an `.mdx` file inside this folder.
+
+Folder Structure:
+
+```diff
+data/
+└── blog/
+    └── what-is-contentlayer`.mdx`
+
++ my-first-post`.mdx`
+```
+
+With MDX, you can embed **React components** directly inside your posts.
+
+Example: Adding a Counter Component to a Post
+
+```mdx
+## My Counter Component
+
+Here is my counter component inside an MDX file:
+
+<Counter />
+```
+
+<Counter />
+
+Contentlayer will handle the processing of your blog posts, so this is all you need to do!
+
+### Configuring Contentlayer
+
+Contentlayer transforms MDX into structured content that Nextjs can easily process. To set it up, create a `contentlayer.config.js` file in your root directory.
+
+In Contentlayer, you define a **schema** to structure your content. This schema specifies the shape of each blog post.
+
+Here’s the schema I use for my blog posts:
+
+```javascript
+import { defineDocumentType } from 'contentlayer/source-files'
+
+export const Blog = defineDocumentType(() => ({
+  name: 'Blog',
+  filePathPattern: 'blog/**/*`.mdx`',
+  contentType: 'mdx',
+  fields: {
+    title: { type: 'string', required: true },
+    date: { type: 'date', required: true },
+    tags: { type: 'list', of: { type: 'string' }, default: [] },
+    summary: { type: 'string' },
+    draft: { type: 'boolean' },
+    images: { type: 'json' },
+    authors: { type: 'list', of: { type: 'string' } },
+  },
+}))
+```
+
+This schema ensures all blog posts have structured metadata like title, date, tags, and summary.
+
+#### How Contentlayer Converts MDX Files into JSON
+
+Once Contentlayer processes your files, each blog post is converted into a structured **JavaScript object**, making it easy to work with inside Nextjs.
+
+Example of the generated JSON:
+
+```json
+{
+  "title": "How to Use MDX and Contentlayer in Nextjs",
+  "date": "2025-02-04",
+  "tags": ["nextjs", "mdx", "contentlayer"],
+  "summary": "A practical guide to setting up MDX and Contentlayer in Nextjs.",
+  "draft": false,
+  "_id": "blog/how-to-use-mdx`.mdx`",
+  "_raw": {
+    "sourceFilePath": "blog/how-to-use-mdx`.mdx`",
+    "sourceFileName": "how-to-use-mdx`.mdx`",
+    "sourceFileDir": "blog",
+    "contentType": "mdx",
+    "flattenedPath": "blog/how-to-use-mdx"
+  },
+  "type": "Blog"
+}
+```
+
+#### Automatic TypeScript Support
+
+Contentlayer automatically **generates TypeScript types** for your content, making it easier to work with blog post data inside Nextjs.
+
+### Integrating Contentlayer with Nextjs
+
+To integrate Contentlayer with Nextjs, you need to update `next.config.js` by adding `withContentlayer`.
+
+```javascript:next.config.js
+const { withContentlayer } = require("next-contentlayer")
+
+module.exports = withContentlayer({
+  reactStrictMode: true,
+})
+```
+
+### Importing Blog Posts into Nextjs
+
+Since Contentlayer **preprocesses** all MDX files, you can import them directly into your Nextjs components.
+
+To display a list of blog posts on the blog page, import `allBlogs` from Contentlayer:
+
+```javascript:app/blog/page.tsx
+import { allBlogs } from "contentlayer/generated"
+
+export default async function BlogPage() {
+  return (
+    <div>
+      <h1>All Posts</h1>
+      <ul>
+        {allBlogs.map((post) => (
+          <li key={post._id}>
+            <a href={`/blog/${post._raw.flattenedPath}`}>{post.title}</a>
+          </li>
+        ))}
+      </ul>
+    </div>
+  )
+}
+```
+
+#### Generating Dynamic Paths for Blog Posts
+
+To create individual blog post pages, use `generateStaticParams` to generate routes dynamically.
+
+```javascript:app/blog/[slug]/page.tsx
+import { allBlogs } from "contentlayer/generated"
+
+export const generateStaticParams = async () => {
+  return allBlogs.map((post) => ({ slug: post._raw.flattenedPath }))
+}
+
+export default async function BlogPost({ params }) {
+  const post = allBlogs.find((p) => p._raw.flattenedPath === params.slug)
+
+  return (
+    <div>
+      <h1>{post.title}</h1>
+      <p>{post.summary}</p>
+      <div dangerouslySetInnerHTML={{ __html: post.body.code }} />
+    </div>
+  )
+}
+```
+
+## Final Thoughts
+
+By using [MDX](https://mdxjs.com/) + [Contentlayer](https://contentlayer.dev/) + [Nextjs](https://nextjs.org/), you get a fast, fully customizable, and developer-friendly blog setup.
+
+**Why It’s Great for a Personal Blog**
+
+- No need for a CMS – Just write Markdown & commit to GitHub.
+- Super fast & SEO-friendly – Nextjs handles static generation.
+- Customizable – Embed React components inside your blog.
+
+If you’re looking to build a high-performance personal blog, this setup is an excellent starting point!

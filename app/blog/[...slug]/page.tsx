@@ -43,8 +43,6 @@ export async function generateMetadata(props: {
   if (post.images) {
     imageList = typeof post.images === 'string' ? [post.images] : post.images
   }
-  console.log(`imageList in build: ${JSON.stringify(imageList)}`)
-  console.log(`siteMetadata.siteUrl in build: ${siteMetadata.siteUrl}`)
   const ogImages = imageList.map((img) => {
     return {
       url: img.includes('http') ? img : siteMetadata.siteUrl + img,
